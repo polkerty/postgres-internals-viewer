@@ -1,7 +1,15 @@
 export function renderItemIdData(itemIdData) {
+
+    const flags = {
+        0: "LP_UNUSED",
+        1: "LP_NORMAL",
+        2: "LP_REDIRECT",
+        3: "LP_DEAD",
+    }
+
     return JSON.stringify({
         lp_off: positionToStr(itemIdData.lp_off),
-        lp_flags: itemIdData.lp_flags,
+        lp_flags: flags[itemIdData.lp_flags],
         lp_len: itemIdData.lp_len
     })
   }
