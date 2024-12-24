@@ -1,5 +1,7 @@
-import { open } from 'fs/promises'
-import { start } from 'repl';
+const { open } = require('fs/promises');
+const { parseItemIdData } = require('./helpers/dataParsers')
+const { renderItemIdData, positionToStr } = require('./helpers/dataRenderers')
+
 
 const PAGE_SIZE = 8192;
 const HEADER_SIZE = 24;
@@ -11,15 +13,6 @@ function bufToBytes(buf) {
         ret += byte.toString(16) + ' '
     }
     return ret;
-}
-
-function positionToStr(pos, width=8) {
-    const raw = pos.toString(16);
-    width = Math.max(width, raw.length);
-    let padded = '';
-    for ( let i = 0 ; i < width - raw.length; ++i ) padded += '0';
-    padded += raw;
-    return padded;
 }
 
 class Group {
@@ -38,7 +31,7 @@ class Group {
 
     toString() {
         let out = 'Group: ' + this.name + '\n';
-        for ( const slot of this.slots) {
+        for (const slot of this.slots) {
             out += '\t' + slot.toString() + '\n';
         }
         return out;
@@ -46,15 +39,24 @@ class Group {
 }
 
 class Slot {
-    constructor(name, buf) {
+    constructor(name, buf, parser, renderer) {
         this.name = name;
         this.buf = buf;
         this.length = buf.length;
         this.position = '-';
+        if (parser) {
+            this.data = parser(buf);
+        } else {
+            this.data = {}
+        }
+        this.renderer = renderer;
     }
 
     toString() {
-        return `[${positionToStr(this.position)}] ` + 'Slot: ' + this.name + ' | Length: ' + this.length + ' | Contents: ' + bufToBytes(this.buf)
+        const dataStr = this.renderer? this.renderer(this.data) : JSON.stringify(this.data);
+        return `[${positionToStr(this.position)}] ` + 'Slot: ' + this.name + ' | Length: ' +
+            this.length + ' | Contents: ' + bufToBytes(this.buf) + ' | Data: ' +
+            dataStr
     }
 }
 
@@ -75,18 +77,18 @@ function getLinePointers(buf, startPos) {
     const group = new Group("Line pointers", startPos);
     let pos = startPos;
     let idx = 1;
-    for (;;++idx) {
+    for (; ; ++idx) {
         const top = Buffer.from(buf.buffer, pos, LINE_POINTER_SIZE);
-        if ( top.readInt32LE(0) === 0) {
+        if (top.readInt32LE(0) === 0) {
             // No line pointer
             break;
         }
-        group.add(new Slot(`linep[${idx}]`, top));
+        group.add(new Slot(`linep[${idx}]`, top, parseItemIdData, renderItemIdData));
         pos += LINE_POINTER_SIZE;
     }
 
     return group;
-    
+
 
 }
 
@@ -97,7 +99,7 @@ class HeapTablePage {
         this.startPos = startPos;
 
         this.linePointers = getLinePointers(
-            Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE), 
+            Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE),
             startPos + HEADER_SIZE);
 
 
@@ -117,7 +119,7 @@ function parseHeapTablePage(buf, startPos) {
 
     console.log(page);
 
-    for ( const group of page.groups ) {
+    for (const group of page.groups) {
         console.log(group.toString());
     }
 
@@ -136,12 +138,12 @@ const readHeapTable = async () => {
     while (true) {
         const { buffer, bytesRead } = await handler.read(Buffer.alloc(PAGE_SIZE), 0, PAGE_SIZE, start)
 
-        if ( !bytesRead ) break;
+        if (!bytesRead) break;
 
         parseHeapTablePage(buffer, totalBytesRead);
 
         start += bytesRead;
-        
+
         totalBytesRead += bytesRead;
     }
 
