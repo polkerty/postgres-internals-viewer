@@ -117,8 +117,6 @@ function parseHeapTablePage(buf, startPos) {
     console.log("Page: ", buf);
     const page = new HeapTablePage(buf, startPos);
 
-    console.log(page);
-
     for (const group of page.groups) {
         console.log(group.toString());
     }
