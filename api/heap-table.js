@@ -13,6 +13,15 @@ function bufToBytes(buf) {
     return ret;
 }
 
+function positionToStr(pos, width=8) {
+    const raw = pos.toString(16);
+    width = Math.max(width, raw.length);
+    let padded = '';
+    for ( let i = 0 ; i < width - raw.length; ++i ) padded += '0';
+    padded += raw;
+    return padded;
+}
+
 class Group {
     constructor(name, position) {
         this.name = name;
@@ -23,7 +32,7 @@ class Group {
 
     add(slot) {
         this.slots.push(slot);
-        slot.position = this.length;
+        slot.position = this.position + this.length;
         this.length += slot.length;
     }
 
@@ -41,10 +50,11 @@ class Slot {
         this.name = name;
         this.buf = buf;
         this.length = buf.length;
+        this.position = '-';
     }
 
     toString() {
-        return 'Slot: ' + this.name + ' | Length: ' + this.length + ' | Contents: ' + bufToBytes(this.buf)
+        return `[${positionToStr(this.position)}] ` + 'Slot: ' + this.name + ' | Length: ' + this.length + ' | Contents: ' + bufToBytes(this.buf)
     }
 }
 
@@ -64,7 +74,7 @@ function makeHeapTablePageHeader(buf, startPos) {
 function getLinePointers(buf, startPos) {
     const group = new Group("Line pointers", startPos);
     let pos = startPos;
-    let idx = 0;
+    let idx = 1;
     for (;;++idx) {
         const top = Buffer.from(buf.buffer, pos, LINE_POINTER_SIZE);
         if ( top.readInt32LE(0) === 0) {
