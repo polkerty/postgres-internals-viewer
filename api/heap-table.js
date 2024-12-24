@@ -1,7 +1,9 @@
 import { open } from 'fs/promises'
+import { start } from 'repl';
 
 const PAGE_SIZE = 8192;
 const HEADER_SIZE = 24;
+const LINE_POINTER_SIZE = 4;
 
 function bufToBytes(buf) {
     let ret = '';
@@ -46,8 +48,8 @@ class Slot {
     }
 }
 
-function makeHeapTablePageHeader(buf) {
-    const group = new Group("Header", 0);
+function makeHeapTablePageHeader(buf, startPos) {
+    const group = new Group("Header", startPos);
     group.add(new Slot("pd_lsn", Buffer.from(buf.buffer, 0, 8)));
     group.add(new Slot("pd_checksum", Buffer.from(buf.buffer, 8, 2)));
     group.add(new Slot("pd_flags", Buffer.from(buf.buffer, 10, 2)));
@@ -59,12 +61,37 @@ function makeHeapTablePageHeader(buf) {
     return group;
 }
 
-class HeapTablePage {
-    constructor(buffer) {
-        // 1. Read header
-        this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, 24));
+function getLinePointers(buf, startPos) {
+    const group = new Group("Line pointers", startPos);
+    let pos = startPos;
+    let idx = 0;
+    for (;;++idx) {
+        const top = Buffer.from(buf.buffer, pos, LINE_POINTER_SIZE);
+        if ( top.readInt32LE(0) === 0) {
+            // No line pointer
+            break;
+        }
+        group.add(new Slot(`linep[${idx}]`, top));
+        pos += LINE_POINTER_SIZE;
+    }
 
-        this.groups = [this.header];
+    return group;
+    
+
+}
+
+class HeapTablePage {
+    constructor(buffer, startPos) {
+        // 1. Read header
+        this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, HEADER_SIZE), startPos);
+        this.startPos = startPos;
+
+        this.linePointers = getLinePointers(
+            Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE), 
+            startPos + HEADER_SIZE);
+
+
+        this.groups = [this.header, this.linePointers];
 
 
 
@@ -74,13 +101,15 @@ class HeapTablePage {
 
 
 
-function parseHeapTablePage(buf) {
+function parseHeapTablePage(buf, startPos) {
     console.log("Page: ", buf);
-    const page = new HeapTablePage(buf);
+    const page = new HeapTablePage(buf, startPos);
 
     console.log(page);
 
-    console.log("Header: ", page.header.toString())
+    for ( const group of page.groups ) {
+        console.log(group.toString());
+    }
 
 
 }
@@ -99,7 +128,7 @@ const readHeapTable = async () => {
 
         if ( !bytesRead ) break;
 
-        parseHeapTablePage(buffer);
+        parseHeapTablePage(buffer, totalBytesRead);
 
         start += bytesRead;
         
