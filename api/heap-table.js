@@ -1,5 +1,5 @@
 const { open } = require('fs/promises');
-const { parseItemIdData } = require('./helpers/dataParsers')
+const { parseItemIdData, parseInt16, parseStr } = require('./helpers/dataParsers')
 const { renderItemIdData, positionToStr } = require('./helpers/dataRenderers')
 
 
@@ -69,12 +69,24 @@ function makeHeapTablePageHeader(buf, startPos) {
     group.add(new Slot("pd_lsn", Buffer.from(buf.buffer, 0, 8)));
     group.add(new Slot("pd_checksum", Buffer.from(buf.buffer, 8, 2)));
     group.add(new Slot("pd_flags", Buffer.from(buf.buffer, 10, 2)));
-    group.add(new Slot("pd_lower", Buffer.from(buf.buffer, 12, 2)));
-    group.add(new Slot("pd_upper", Buffer.from(buf.buffer, 14, 2)));
-    group.add(new Slot("pd_special", Buffer.from(buf.buffer, 16, 2), buf => ({ size: buf.readInt16LE(0)})));
+    group.add(new Slot("pd_lower", Buffer.from(buf.buffer, 12, 2), parseInt16));
+    group.add(new Slot("pd_upper", Buffer.from(buf.buffer, 14, 2), parseInt16));
+    group.add(new Slot("pd_special", Buffer.from(buf.buffer, 16, 2), parseInt16));
     group.add(new Slot("pd_prune_xid", Buffer.from(buf.buffer, 18, 2)));
     group.add(new Slot("pd_pagesize_version", Buffer.from(buf.buffer, 20, 4)));
     return group;
+}
+
+function getFreeSpace(buf, headers) {
+    const start = headers.get('pd_lower').data.value, end = headers.get('pd_upper').data.value;
+    const len = end - start;
+    const group = new Group("Free space", start);
+
+
+    group.add(new Slot("hole", Buffer.from(buf.buffer, start, len)));
+
+    return group;
+
 }
 
 function getLinePointers(buf, startPos) {
@@ -93,11 +105,23 @@ function getLinePointers(buf, startPos) {
 
     return group;
 
-
 }
 
 function getTuples(buf, headers, linePointers) {
-    
+
+    // Let's assume there's always at least ONE pointer in a page.
+    // Therefore, start of region == headers.pd_upper
+    const group = new Group("Tuples", headers.get('pd_upper').data.value);
+
+    for ( const linePointer of linePointers.slots.reverse()) {
+        // Process the line pointers in reverse order, in keeping
+        // with the layout flow of the page
+        const data = Buffer.from(buf.buffer, linePointer.data.lp_off, linePointer.data.lp_len);
+        group.add(new Slot(`tuple[${linePointer.data.index}]`, data, parseStr));
+    }
+
+    return group;
+
 }
 
 class HeapTablePage {
@@ -107,20 +131,16 @@ class HeapTablePage {
         this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, HEADER_SIZE), startPos);
 
 
-        // if (this.header.get('pd_special').data.size !== PAGE_SIZE) {
-        //     throw new Error(`No support for pages with pd_special yet`)
-        // }
         this.linePointers = getLinePointers(
             Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE),
             startPos + HEADER_SIZE);
 
         
+        this.freeSpace = getFreeSpace(buffer, this.header);
+
         this.tuples = getTuples(buffer, this.header, this.linePointers);
 
-
-        this.groups = [this.header, this.linePointers];
-
-
+        this.groups = [this.header, this.linePointers, this.freeSpace, this.tuples];
 
     }
 }

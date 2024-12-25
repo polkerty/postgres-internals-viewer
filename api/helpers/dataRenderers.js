@@ -13,8 +13,7 @@ export function renderItemIdData(itemIdData) {
         lp_len: itemIdData.lp_len,
         index: itemIdData.index
     })
-  }
-  
+}  
 
 export function positionToStr(pos, width = 8) {
     const raw = pos.toString(16);
@@ -24,3 +23,4 @@ export function positionToStr(pos, width = 8) {
     padded += raw;
     return padded;
 }
+

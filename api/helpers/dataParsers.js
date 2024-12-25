@@ -36,3 +36,10 @@ export const parseItemIdData = (index) => (buffer, offsetInBuffer = 0) => {
     return { lp_off, lp_flags, lp_len, index };
   }
 
+
+// Use when we don't want to parse the data at all
+export const parseNone = () => ({ });
+
+export const parseInt16 = buf => ({ value: buf.readInt16LE(0)});
+
+export const parseStr = buf => ({ text: buf.toString() });
