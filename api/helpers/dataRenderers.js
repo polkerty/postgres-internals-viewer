@@ -10,7 +10,8 @@ export function renderItemIdData(itemIdData) {
     return JSON.stringify({
         lp_off: positionToStr(itemIdData.lp_off),
         lp_flags: flags[itemIdData.lp_flags],
-        lp_len: itemIdData.lp_len
+        lp_len: itemIdData.lp_len,
+        index: itemIdData.index
     })
   }
   

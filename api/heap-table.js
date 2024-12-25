@@ -29,6 +29,10 @@ class Group {
         this.length += slot.length;
     }
 
+    get(name) {
+        return this.slots.find(slot => slot.name === name);
+    }
+
     toString() {
         let out = 'Group: ' + this.name + '\n';
         for (const slot of this.slots) {
@@ -67,7 +71,7 @@ function makeHeapTablePageHeader(buf, startPos) {
     group.add(new Slot("pd_flags", Buffer.from(buf.buffer, 10, 2)));
     group.add(new Slot("pd_lower", Buffer.from(buf.buffer, 12, 2)));
     group.add(new Slot("pd_upper", Buffer.from(buf.buffer, 14, 2)));
-    group.add(new Slot("pd_special", Buffer.from(buf.buffer, 16, 2)));
+    group.add(new Slot("pd_special", Buffer.from(buf.buffer, 16, 2), buf => ({ size: buf.readInt16LE(0)})));
     group.add(new Slot("pd_prune_xid", Buffer.from(buf.buffer, 18, 2)));
     group.add(new Slot("pd_pagesize_version", Buffer.from(buf.buffer, 20, 4)));
     return group;
@@ -83,7 +87,7 @@ function getLinePointers(buf, startPos) {
             // No line pointer
             break;
         }
-        group.add(new Slot(`linep[${idx}]`, top, parseItemIdData, renderItemIdData));
+        group.add(new Slot(`linep[${idx}]`, top, parseItemIdData(idx), renderItemIdData));
         pos += LINE_POINTER_SIZE;
     }
 
@@ -92,15 +96,26 @@ function getLinePointers(buf, startPos) {
 
 }
 
+function getTuples(buf, headers, linePointers) {
+    
+}
+
 class HeapTablePage {
     constructor(buffer, startPos) {
         // 1. Read header
-        this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, HEADER_SIZE), startPos);
         this.startPos = startPos;
+        this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, HEADER_SIZE), startPos);
 
+
+        // if (this.header.get('pd_special').data.size !== PAGE_SIZE) {
+        //     throw new Error(`No support for pages with pd_special yet`)
+        // }
         this.linePointers = getLinePointers(
             Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE),
             startPos + HEADER_SIZE);
+
+        
+        this.tuples = getTuples(buffer, this.header, this.linePointers);
 
 
         this.groups = [this.header, this.linePointers];

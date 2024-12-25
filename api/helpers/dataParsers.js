@@ -19,7 +19,7 @@ typedef struct ItemIdData
 typedef ItemIdData *ItemId;
 */
 
-export function parseItemIdData(buffer, offsetInBuffer = 0) {
+export const parseItemIdData = (index) => (buffer, offsetInBuffer = 0) => {
     // Read the 4 bytes as an unsigned 32-bit integer in *little-endian* order.
     // (PostgreSQL typically stores pages in the server’s native endianness,
     //  which on most modern machines is little-endian.)
@@ -33,6 +33,6 @@ export function parseItemIdData(buffer, offsetInBuffer = 0) {
     const lp_flags = (rawValue >> 15)  & 0x03;
     const lp_len   = (rawValue >> 17)  & 0x7FFF;
   
-    return { lp_off, lp_flags, lp_len };
+    return { lp_off, lp_flags, lp_len, index };
   }
 
