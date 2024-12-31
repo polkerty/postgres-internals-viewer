@@ -30,7 +30,7 @@ function makeJoinQuery(depth=3) {
     const tables = ['a', 'b', 'c', 'd'].slice(0, depth);
 
     // Select order is stable
-    let sql = `SELECT ${tables.map(name => `${name}.data`).join(', ')}\n`;
+    let sql = `EXPLAIN SELECT ${tables.map(name => `${name}.data`).join(', ')}\n`;
     sql += `FROM \n`;
 
     const fromTables = shuffle(tables);
