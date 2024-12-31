@@ -58,6 +58,9 @@ function makeJoinQuery(depth=3) {
 
 }
 
+// Tables are created identically as so:
+// CREATE TABLE a AS
+// SELECT generate_series(1, 100) AS id, floor(random() * 1000000) AS data;
 
 
 console.log(makeJoinQuery())
