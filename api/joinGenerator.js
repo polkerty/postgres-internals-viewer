@@ -52,7 +52,7 @@ function makeJoinQuery(depth=3) {
         sql += '\n';
     }
 
-    sql += `ORDER BY ${tables.map((_, idx) => `${idx + 1} asc`).join(', ')}\n`
+    sql += `ORDER BY ${tables.map((_, idx) => `${idx + 1} asc`).join(', ')};\n`
 
     return sql;
 
