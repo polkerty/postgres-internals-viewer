@@ -12,7 +12,7 @@ function randomJoin() {
         "LEFT JOIN",
         "RIGHT JOIN",
         "INNER JOIN",
-        "OUTER JOIN"
+        "FULL OUTER JOIN"
     ];
     return options[Math.random()*options.length|0]
 }
@@ -63,7 +63,7 @@ function makeJoinQuery(depth=3) {
 // SELECT generate_series(1, 100) AS id, floor(random() * 1000000) AS data;
 
 
-console.log(makeJoinQuery())
+console.log(makeJoinQuery(4))
 
 
 
