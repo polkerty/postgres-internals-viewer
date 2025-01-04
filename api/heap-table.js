@@ -1,5 +1,5 @@
 const { open } = require('fs/promises');
-const { parseItemIdData, parseInt16, parseInt32, parseStr } = require('./helpers/dataParsers')
+const { parseItemIdData, parseCTIDData, parseInt16, parseInt32, parseStr } = require('./helpers/dataParsers')
 const { renderItemIdData, positionToStr } = require('./helpers/dataRenderers')
 
 
@@ -120,9 +120,15 @@ function getTuples(buf, headers, linePointers) {
         const TUPLE_BASE = linePointer.data.lp_off;
         const t_xmin = Buffer.from(buf.buffer, TUPLE_BASE + 0, 4);
         const t_xmax = Buffer.from(buf.buffer, TUPLE_BASE + 4, 4);
+        const t_cid = Buffer.from(buf.buffer, TUPLE_BASE + 8, 4);
+        const t_xvac = Buffer.from(buf.buffer, TUPLE_BASE + 12, 4);
+        const t_ctid = Buffer.from(buf.buffer, TUPLE_BASE + 12, 6);
 
         group.add(new Slot(`\ttuple[${linePointer.data.index}].t_xmin`, t_xmin, parseInt32));
         group.add(new Slot(`\ttuple[${linePointer.data.index}].t_xmax`, t_xmax, parseInt32));
+        group.add(new Slot(`\ttuple[${linePointer.data.index}].t_cid`, t_cid, parseInt32));
+        group.add(new Slot(`\ttuple[${linePointer.data.index}].t_xvac`, t_xvac, parseInt32));
+        group.add(new Slot(`\ttuple[${linePointer.data.index}].t_ctid`, t_ctid, parseCTIDData));
         group.add(new Slot(`tuple[${linePointer.data.index}]`, data, parseStr));
     }
 

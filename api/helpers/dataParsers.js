@@ -36,6 +36,13 @@ export const parseItemIdData = (index) => (buffer, offsetInBuffer = 0) => {
     return { lp_off, lp_flags, lp_len, index };
   }
 
+export const parseCTIDData = (buffer) => {
+  // block no is 4 bytes
+  const blockId = buffer.readUInt32LE(0);
+  const linePointer = buffer.readUInt16LE(4);
+  return { blockId, linePointer }
+}
+
 
 // Use when we don't want to parse the data at all
 export const parseNone = () => ({ });
