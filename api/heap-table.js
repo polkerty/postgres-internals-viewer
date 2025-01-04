@@ -1,5 +1,5 @@
 const { open } = require('fs/promises');
-const { parseItemIdData, parseInt16, parseStr } = require('./helpers/dataParsers')
+const { parseItemIdData, parseInt16, parseInt32, parseStr } = require('./helpers/dataParsers')
 const { renderItemIdData, positionToStr } = require('./helpers/dataRenderers')
 
 
@@ -117,6 +117,12 @@ function getTuples(buf, headers, linePointers) {
         // Process the line pointers in reverse order, in keeping
         // with the layout flow of the page
         const data = Buffer.from(buf.buffer, linePointer.data.lp_off, linePointer.data.lp_len);
+        const TUPLE_BASE = linePointer.data.lp_off;
+        const t_xmin = Buffer.from(buf.buffer, TUPLE_BASE + 0, 4);
+        const t_xmax = Buffer.from(buf.buffer, TUPLE_BASE + 4, 4);
+
+        group.add(new Slot(`\ttuple[${linePointer.data.index}].t_xmin`, t_xmin, parseInt32));
+        group.add(new Slot(`\ttuple[${linePointer.data.index}].t_xmax`, t_xmax, parseInt32));
         group.add(new Slot(`tuple[${linePointer.data.index}]`, data, parseStr));
     }
 
@@ -161,7 +167,7 @@ function parseHeapTablePage(buf, startPos) {
 
 const readHeapTable = async () => {
 
-    const handler = await open('/Users/jbrazeal/postgres/db1/base/16384/16385', 'r');
+    const handler = await open('/Users/jbrazeal/postgres/db1/base/16384/49186', 'r');
     let start = 0;
 
     console.log("Parsing file");

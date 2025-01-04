@@ -42,4 +42,6 @@ export const parseNone = () => ({ });
 
 export const parseInt16 = buf => ({ value: buf.readInt16LE(0)});
 
+export const parseInt32 = buf => ({ value: buf.readInt32LE(0)});
+
 export const parseStr = buf => ({ text: buf.toString() });
