@@ -27,7 +27,7 @@ function randomOp() {
 
 
 function makeJoinQuery(depth=3) {
-    const tables = ['a', 'b', 'c', 'd'].slice(0, depth);
+    const tables = ['a', 'b', 'c', 'd', 'e'].slice(0, depth);
 
     // Select order is stable
     let sql = `EXPLAIN SELECT ${tables.map(name => `${name}.data`).join(', ')}\n`;
@@ -63,7 +63,7 @@ function makeJoinQuery(depth=3) {
 // SELECT generate_series(1, 100) AS id, floor(random() * 1000000) AS data;
 
 
-console.log(makeJoinQuery(4))
+console.log(makeJoinQuery(5))
 
 
 
