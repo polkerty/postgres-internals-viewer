@@ -67,7 +67,7 @@ class Slot {
 function makeHeapTablePageHeader(buf, startPos) {
     const group = new Group("Header", startPos);
     group.add(new Slot("pd_lsn", Buffer.from(buf.buffer, 0, 8)));
-    group.add(new Slot("pd_checksum", Buffer.from(buf.buffer, 8, 2)));
+    group.add(new Slot("pd_checksum", Buffer.from(buf.buffer, 8, 2), parseInt16));
     group.add(new Slot("pd_flags", Buffer.from(buf.buffer, 10, 2)));
     group.add(new Slot("pd_lower", Buffer.from(buf.buffer, 12, 2), parseInt16));
     group.add(new Slot("pd_upper", Buffer.from(buf.buffer, 14, 2), parseInt16));
