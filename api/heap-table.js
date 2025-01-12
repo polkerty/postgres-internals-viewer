@@ -89,17 +89,16 @@ function getFreeSpace(buf, headers) {
 
 }
 
-function getLinePointers(buf, startPos) {
+function getLinePointers(buf, totalLinePointers, startPos) {
     const group = new Group("Line pointers", startPos);
     let pos = startPos;
-    let idx = 1;
-    for (; ; ++idx) {
+    for (idx = 1; idx <= totalLinePointers; ++idx) {
         const top = Buffer.from(buf.buffer, pos, LINE_POINTER_SIZE);
         if (top.readInt32LE(0) === 0) {
-            // No line pointer
-            break;
+            group.add(new Slot(`linep[${idx}] - null`, top, parseItemIdData(idx)));
+        } else {
+            group.add(new Slot(`linep[${idx}]`, top, parseItemIdData(idx), renderItemIdData));
         }
-        group.add(new Slot(`linep[${idx}]`, top, parseItemIdData(idx), renderItemIdData));
         pos += LINE_POINTER_SIZE;
     }
 
@@ -114,6 +113,10 @@ function getTuples(buf, headers, linePointers) {
     const group = new Group("Tuples", headers.get('pd_upper').data.value);
 
     for ( const linePointer of linePointers.slots.reverse()) {
+        if ( linePointer.data.lp_off === 0 ) {
+            // Dummy
+            continue
+        }
         // Process the line pointers in reverse order, in keeping
         // with the layout flow of the page
         const data = Buffer.from(buf.buffer, linePointer.data.lp_off, linePointer.data.lp_len);
@@ -142,9 +145,11 @@ class HeapTablePage {
         this.startPos = startPos;
         this.header = makeHeapTablePageHeader(Buffer.from(buffer.buffer, 0, HEADER_SIZE), startPos);
 
+        const totalLinePointers = (this.header.get('pd_lower').data.value - HEADER_SIZE) / LINE_POINTER_SIZE;
 
         this.linePointers = getLinePointers(
             Buffer.from(buffer.buffer, HEADER_SIZE, buffer.length - HEADER_SIZE),
+            totalLinePointers,
             startPos + HEADER_SIZE);
 
         
@@ -162,6 +167,7 @@ class HeapTablePage {
 
 function parseHeapTablePage(buf, startPos) {
     console.log("Page: ", buf);
+    console.log(bufToBytes(buf));
     const page = new HeapTablePage(buf, startPos);
 
     for (const group of page.groups) {
