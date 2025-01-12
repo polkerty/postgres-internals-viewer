@@ -113,8 +113,12 @@ function getTuples(buf, headers, linePointers) {
     const group = new Group("Tuples", headers.get('pd_upper').data.value);
 
     for ( const linePointer of linePointers.slots.reverse()) {
-        if ( linePointer.data.lp_off === 0 ) {
-            // Dummy
+        if ( linePointer.data.lp_flags === 0 ) {
+            // Unused
+            continue
+        }
+        if ( linePointer.data.lp_flags === 2 ) {
+            // HOT redirect, skip. This doesn't point to physical tuple on the page.
             continue
         }
         // Process the line pointers in reverse order, in keeping
