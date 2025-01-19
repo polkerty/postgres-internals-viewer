@@ -90,7 +90,7 @@ export default function Buffers() {
         return bufferDescs.filter(buf => buf.valid);
     }, [bufferDescs])
 
-    return (<div>
+    return (<div style={{position:"relative"}}>
         <div className="buffer-header">
             <div>Total buffers: {bufferDescs.length} | Valid buffers: {activeBufferDescs.length}</div>
             <div>

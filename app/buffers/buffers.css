@@ -1,6 +1,9 @@
 .buffer-map {
     display: flex;
     flex-wrap: wrap;
+    height: calc(100vh - 100px);
+    overflow: scroll;
+    align-content: flex-start;
 }
 
 .buffer-map .buffer {
@@ -21,6 +24,7 @@
     justify-content: center;
     font-size: small;
 }
+
 
 .buffer-map .buffer__cell > div {
     display: flex;
@@ -76,8 +80,5 @@
 }
 
 .buffer-header {
-    position: sticky;
-    top: 0;
-    left: 0;
     border-bottom: 1px solid black;
 }
