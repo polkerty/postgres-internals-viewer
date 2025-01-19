@@ -90,18 +90,21 @@ export default function Buffers() {
         return bufferDescs.filter(buf => buf.valid);
     }, [bufferDescs])
 
-    return <div>
-        <div>Total buffers: {bufferDescs.length} | Valid buffers: {activeBufferDescs.length}</div>
-        <div>
-            <button onClick={()=>setForceFetchData(x => x + 1)}>Refresh</button>
-            <button onClick={()=>setDistinctColors(x => !x)}>{
-                distinctColors ? "Don't use distinct colors" : "Use distinct colors"
-            }</button>
+    return (<div>
+        <div className="buffer-header">
+            <div>Total buffers: {bufferDescs.length} | Valid buffers: {activeBufferDescs.length}</div>
+            <div>
+                <button onClick={()=>setForceFetchData(x => x + 1)}>Refresh</button>
+                <button onClick={()=>setDistinctColors(x => !x)}>{
+                    distinctColors ? "Don't use distinct colors" : "Use distinct colors"
+                }</button>
+            </div>
         </div>
+
         <div className='buffer-map' >
             {
                 activeBufferDescs.map(b => <BufferDesc key={b.id} buffer={b} distinctColors={distinctColors} />)
             }
         </div>
-    </div>
+    </div>);
 }
