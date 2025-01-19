@@ -43,6 +43,7 @@
     width: 300px;
     left: 0;
     flex-direction: column;
+    z-index: 1;
 }
 
 .buffer-map .buffer__details::after {
