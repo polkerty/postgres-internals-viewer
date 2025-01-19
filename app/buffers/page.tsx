@@ -90,6 +90,12 @@ export default function Buffers() {
         return bufferDescs.filter(buf => buf.valid);
     }, [bufferDescs])
 
+    const copyRelnameCommand = useCallback(()=>{
+        const distinctOids = [...new Set(activeBufferDescs.map(b => b.tag.relNumber))];
+        const query = `select oid, relname from pg_class where oid in (${distinctOids.join(', ')});`;
+        navigator.clipboard.writeText(query);
+    }, [bufferDescs]);
+
     return (<div style={{position:"relative"}}>
         <div className="buffer-header">
             <div>Total buffers: {bufferDescs.length} | Valid buffers: {activeBufferDescs.length}</div>
@@ -98,6 +104,7 @@ export default function Buffers() {
                 <button onClick={()=>setDistinctColors(x => !x)}>{
                     distinctColors ? "Don't use distinct colors" : "Use distinct colors"
                 }</button>
+                <button onClick={copyRelnameCommand}>Relname lookup query</button>
             </div>
         </div>
 
