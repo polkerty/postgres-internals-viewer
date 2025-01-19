@@ -27,7 +27,15 @@ interface IBufferDesc {
     "tag": BufferTag;
 }
 
-function BufferDesc ({buffer}:{ buffer: IBufferDesc}) {
+function colorOfRel(relId: number) {
+    const red = relId % 256;
+    const blue = (relId * 1773) % 256;
+    const green = (relId * 1991) % 256;
+
+    return `rgb(${red}, ${green}, ${blue})`;
+}
+
+function BufferDesc ({buffer, distinctColors}:{ buffer: IBufferDesc, distinctColors: boolean}) {
 
     const [showPopup, setShowPopup] = useState(false);
 
@@ -41,12 +49,19 @@ function BufferDesc ({buffer}:{ buffer: IBufferDesc}) {
 
     const closeDetails = useCallback(()=>{
         return false;
-    }, [setShowPopup])
+    }, [setShowPopup]);
 
+    const style = useMemo(()=> {
+        return distinctColors ? {
+            backgroundColor: colorOfRel(buffer.tag.relNumber)
+        } : {}
+    }, [distinctColors]);
 
-    return <div className={className} onClick={()=>setShowPopup(x=>!x)} >
-        <div>{ buffer.tag.relNumber}</div>
-        <div>{ buffer.tag.blockNumber }</div>
+    return <div className={className} style={style} onClick={()=>setShowPopup(x=>!x)} >
+        <div className="buffer__cell" >
+            <div>{ buffer.tag.relNumber}</div>
+            <div>{ buffer.tag.blockNumber }</div>
+        </div>
         { showPopup && <div className="buffer__details" >
             <div>
                 <pre>{JSON.stringify(buffer, null, 2)}</pre>
@@ -62,6 +77,7 @@ export default function Buffers() {
     // 1. Let's fetch data
     const [forceFetchData, setForceFetchData] = useState(0);
     const [bufferDescs, setBufferDescs] = useState<IBufferDesc[]>([]);
+    const [distinctColors, setDistinctColors] = useState(false);
 
     useEffect(()=>{
         (async ()=> {
@@ -76,10 +92,15 @@ export default function Buffers() {
 
     return <div>
         <div>Total buffers: {bufferDescs.length} | Valid buffers: {activeBufferDescs.length}</div>
-        <button onClick={()=>setForceFetchData(x => x + 1)}>Refresh</button>
+        <div>
+            <button onClick={()=>setForceFetchData(x => x + 1)}>Refresh</button>
+            <button onClick={()=>setDistinctColors(x => !x)}>{
+                distinctColors ? "Don't use distinct colors" : "Use distinct colors"
+            }</button>
+        </div>
         <div className='buffer-map' >
             {
-                activeBufferDescs.map(b => <BufferDesc key={b.id} buffer={b} />)
+                activeBufferDescs.map(b => <BufferDesc key={b.id} buffer={b} distinctColors={distinctColors} />)
             }
         </div>
     </div>
