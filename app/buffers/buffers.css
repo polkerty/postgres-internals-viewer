@@ -39,7 +39,7 @@
     border: 1px solid #eee;
     box-shadow: 3px 3px 3px #eee;
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     width: 300px;
     left: 0;
     flex-direction: column;
@@ -52,9 +52,9 @@
     position: absolute;
     left: 0;
     border: 10px solid transparent;
-    border-top: 10px solid white;
+    border-bottom: 10px solid white;
     border-left: 10px solid white;
-    bottom: -20px;
+    top: -20px;
     z-index: 1;
 }
 
