@@ -4,6 +4,7 @@ export default function Home() {
       <ul>
         <li><a href='/heap-table' >Heap Table Page Viewer</a></li>
         <li><a href='/buffers' >Buffer Viewer</a></li>
+        <li><a href='/clog' >Commits and the CLOG</a></li>
       </ul>
     </div>
   );
